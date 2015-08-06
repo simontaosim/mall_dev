@@ -3,7 +3,7 @@ class User
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable and :omniauthable
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :trackable, 
+         :recoverable, :rememberable, :trackable,
 	       :validatable
 
   ## Mobile authenticatable
@@ -40,6 +40,16 @@ class User
   # field :locked_at,       type: Time
   include Mongoid::Timestamps
 
+  ## validators
+  validates :username, :uniqueness => {:case_sensitive => false}
+
+  attr_accessor :signin
+
+  def self.find_first_by_auth_conditions(warden_conditions)
+    conditions = warden_conditions.dup
+    signin_downcase = conditions[:signin].downcase
+    any_of({username: signin_downcase}, {email: signin_downcase}).first
+  end
 
   def self.find_or_create_by_mobile(mobile)
     find_or_create(mobile: mobile)
@@ -48,5 +58,8 @@ class User
   def admin?
     Setting.admin_mobiles.include?(self.mobile)
   end
-  
+
+  def self.admin_auth
+  end
+
 end
